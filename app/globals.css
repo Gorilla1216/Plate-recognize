@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --muted: #8a8a8a;
+  --border: #e6e6e6;
+  --border-hover: #cfcfcf;
+  --button: #3a3a3a;
+  --button-hover: #2a2a2a;
+  --button-foreground: #ffffff;
+  --surface: #f7f7f7;
+  --disabled: #d9d9d9;
+  --error: #b45309;
+  --accent: #7aa7ff;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+html.dark {
+  --background: #111111;
+  --foreground: #f3f3f3;
+  --muted: #9a9a9a;
+  --border: #2c2c2c;
+  --border-hover: #4a4a4a;
+  --button: #f3f3f3;
+  --button-hover: #e4e4e4;
+  --button-foreground: #111111;
+  --surface: #1c1c1c;
+  --disabled: #3a3a3a;
+  --error: #f0b27a;
+  --accent: #7aa7ff;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-button: var(--button);
+  --color-button-hover: var(--button-hover);
+  --color-button-foreground: var(--button-foreground);
+  --color-surface: var(--surface);
+  --color-disabled: var(--disabled);
+  --color-error: var(--error);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-inter);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Helvetica, Arial, sans-serif;
+  margin: 0;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}

@@ -15,3 +15,5 @@ npm.cmd run dev
 Open http://localhost:3000. No paid AI API keys are required. Image generation requires a separate local image-generation model and is currently unavailable.
 
 See [SETUP.md](SETUP.md) for configuration, checks, and a temporary public demo using your PC and Cloudflare Tunnel.
+
+For hosted deployment with authenticated access to your PC's Ollama, see [BACKEND_DEPLOYMENT.md](BACKEND_DEPLOYMENT.md).

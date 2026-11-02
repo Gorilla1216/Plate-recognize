@@ -12,7 +12,24 @@ export async function ollamaChat({ messages, max_tokens, json = false }: {
   json?: boolean;
 }) {
   const model = process.env.OLLAMA_MODEL || "qwen3.5:4b";
-  const baseUrl = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
+  const gatewayUrl = process.env.OLLAMA_GATEWAY_URL?.trim();
+  const gatewayToken = process.env.OLLAMA_GATEWAY_TOKEN?.trim();
+  if (gatewayUrl && (!gatewayToken || gatewayToken.length < 32)) {
+    throw Object.assign(new Error("Configure OLLAMA_GATEWAY_TOKEN in the hosting environment."), { status: 503 });
+  }
+  if (gatewayUrl) {
+    let valid = false;
+    try {
+      const url = new URL(gatewayUrl);
+      valid = url.protocol === "https:" && !url.username && !url.password && !url.search && !url.hash;
+    } catch { /* Report a configuration error without exposing credentials. */ }
+    if (!valid) throw Object.assign(new Error("OLLAMA_GATEWAY_URL must be a valid HTTPS URL without credentials or query parameters."), { status: 503 });
+  }
+  if (!gatewayUrl && (process.env.VERCEL || process.env.NETLIFY)) {
+    throw Object.assign(new Error("Configure OLLAMA_GATEWAY_URL and OLLAMA_GATEWAY_TOKEN to connect to your PC."), { status: 503 });
+  }
+  const baseUrl = gatewayUrl || process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
+  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS) || (gatewayUrl ? 55_000 : 300_000);
   const converted = messages.map((message) => {
     if (typeof message.content === "string") return message;
     const images: string[] = [];
@@ -31,14 +48,15 @@ export async function ollamaChat({ messages, max_tokens, json = false }: {
   try {
     response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(gatewayUrl ? { Authorization: `Bearer ${gatewayToken}` } : {}) },
       body: JSON.stringify({
         model, messages: converted, stream: false,
         ...(model.startsWith("qwen") ? { think: false } : {}),
         ...(json ? { format: "json" } : {}),
         options: { num_predict: max_tokens, num_ctx: 4096, temperature: 0.2 },
       }),
-      signal: AbortSignal.timeout(300_000),
+      signal: AbortSignal.timeout(timeout),
+      redirect: "error",
     });
   } catch (error) {
     const timedOut = error instanceof Error && /timeout|abort/i.test(error.name);
@@ -48,6 +66,11 @@ export async function ollamaChat({ messages, max_tokens, json = false }: {
   }
   const data = await response.json() as { error?: string; message?: { content?: string } };
   if (!response.ok) {
+    if (gatewayUrl) {
+      throw Object.assign(new Error(response.status === 401
+        ? "Backend authentication failed. Check OLLAMA_GATEWAY_TOKEN."
+        : data.error || "The local AI backend is unavailable."), { status: response.status });
+    }
     throw Object.assign(new Error(response.status === 404
       ? `Модель олдсонгүй. Терминалд ollama pull ${model} ажиллуулна уу.`
       : data.error || "Ollama хүсэлт амжилтгүй боллоо."), { status: 503 });

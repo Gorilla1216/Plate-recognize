@@ -6,6 +6,8 @@ The interface remains in Mongolian. AI answers use English because the small loc
 
 ## 1. Architecture
 
+For Vercel or Netlify, the app can also use an authenticated HTTPS gateway on your PC. See [BACKEND_DEPLOYMENT.md](BACKEND_DEPLOYMENT.md) for this additional architecture. The local-only flow below remains the default; hosted gateway requests instead use a 55-second adapter timeout.
+
 ```mermaid
 flowchart LR
     Browser[Visitor's browser] -->|HTTPS: pages, photos, questions| Cloudflare[Cloudflare Quick Tunnel]

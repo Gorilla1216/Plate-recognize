@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "backend": "node --env-file=.env.gateway.local scripts/ollama-gateway.mjs",
+    "test:backend": "node --test scripts/test-ollama.mjs scripts/test-gateway.mjs",
     "lint": "eslint"
   },
   "dependencies": {

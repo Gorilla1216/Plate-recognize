@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { ollamaChat } from "@/app/lib/ollama";
 import { errorResponse } from "@/app/lib/hf";
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json() as { messages?: unknown };

@@ -46,3 +46,34 @@ test('gives model installation instructions when model is missing', async () => 
     );
   } finally { globalThis.fetch = original; }
 });
+
+test('sends credentials only to the configured HTTPS gateway and disables redirects', async () => {
+  const original = globalThis.fetch;
+  process.env.OLLAMA_GATEWAY_URL = 'https://gateway.example';
+  process.env.OLLAMA_GATEWAY_TOKEN = 'test-gateway-secret-12345678901234567890';
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, 'https://gateway.example/api/chat');
+    assert.equal(options.headers.Authorization, `Bearer ${process.env.OLLAMA_GATEWAY_TOKEN}`);
+    assert.equal(options.redirect, 'error');
+    return Response.json({ message: { content: 'pasta' } });
+  };
+  try {
+    assert.equal(await ollamaChat({ messages: [{ role: 'user', content: 'Food?' }], max_tokens: 100 }), 'pasta');
+    delete process.env.OLLAMA_GATEWAY_TOKEN;
+    await assert.rejects(ollamaChat({ messages: [], max_tokens: 100 }), { status: 503 });
+    process.env.OLLAMA_GATEWAY_TOKEN = 'test-gateway-secret-12345678901234567890';
+    process.env.OLLAMA_GATEWAY_URL = 'http://gateway.example';
+    await assert.rejects(ollamaChat({ messages: [], max_tokens: 100 }), { status: 503 });
+  } finally {
+    globalThis.fetch = original;
+    delete process.env.OLLAMA_GATEWAY_URL;
+    delete process.env.OLLAMA_GATEWAY_TOKEN;
+  }
+});
+
+test('hosted deployments fail clearly when no gateway is configured', async () => {
+  const original = process.env.VERCEL;
+  process.env.VERCEL = '1';
+  try { await assert.rejects(ollamaChat({ messages: [], max_tokens: 10 }), { status: 503 }); }
+  finally { if (original === undefined) delete process.env.VERCEL; else process.env.VERCEL = original; }
+});

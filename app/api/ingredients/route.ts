@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { errorResponse } from "@/app/lib/hf";
 import { ollamaChat } from "@/app/lib/ollama";
 
+export const maxDuration = 60;
+
 const MAX_BYTES = 4 * 1024 * 1024;
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png"]);
 
